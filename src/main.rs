@@ -1,22 +1,32 @@
 use clap::Parser;
+use std::path::PathBuf;
 
-use fastoche;
+mod parser;
+use parser::parse;
 
-
-/// fastoche is a rdbioseq program
 #[derive(Parser)]
+#[command(author="Benjamin Istace",
+    about="Computes statistics about Fastx files that are gzipped or not",
+    long_about=None
+)]
 struct Args {
-    /// first argument, positional
-    first: String,
-    /// second argument
-    #[clap(short, long)]
-    second: String,
+    #[arg(
+        short,
+        required = true,
+        help = "Fastx files to process. Can be gzipped."
+    )]
+    files: Vec<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = 0,
+        help = "Sequences shorter than this number will not be processed."
+    )]
+    min_size: usize,
 }
 
-
 fn main() {
-    // parse cli
     let args = Args::parse();
-
-    // ...
+    parse(&args.files);
 }

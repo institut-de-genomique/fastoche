@@ -7,3 +7,5 @@ authors = ["bistace"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+flate2 = "1.0.25"
+bio = "1.1.0"
