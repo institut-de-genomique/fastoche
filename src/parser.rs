@@ -1,5 +1,5 @@
 use flate2::read::GzDecoder;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
 trait FastxParser {}
@@ -13,29 +13,20 @@ pub fn parse(files: &[PathBuf]) {
 }
 
 fn compute_stats(file: &Path) {
-    if !file.exists() {
-        panic!("File not found {file:?}");
-    }
+    assert!(file.exists(), "File not found {file:?}");
 
-    get_correct_reader(file);
+    let mut reader = get_correct_reader(file);
 }
 
 fn get_correct_reader(file_path: &Path) -> Box<dyn FastxParser> {
-    let file =
-        std::fs::File::open(file_path).unwrap_or_else(|e| panic!("Failed to open file: {e}"));
-
-    let mut buf_reader: Box<dyn BufRead>;
-    if file_path.extension().take().unwrap() == "gz" {
-        let gz = GzDecoder::new(file);
-        buf_reader = Box::new(BufReader::new(gz));
-    } else {
-        buf_reader = Box::new(BufReader::new(file));
-    }
-
+    let mut buf_reader = get_bufreader(file_path);
     let mut first_line = String::new();
     buf_reader
         .read_line(&mut first_line)
         .expect("Could not read from file");
+
+    // Reset the BufReader to the start of the file
+    let buf_reader = get_bufreader(file_path);
 
     if is_fastq(&first_line) {
         Box::new(bio::io::fastq::Reader::new(buf_reader))
@@ -46,10 +37,22 @@ fn get_correct_reader(file_path: &Path) -> Box<dyn FastxParser> {
     }
 }
 
-fn is_fastq(first_line: &String) -> bool {
+fn get_bufreader(file_path: &Path) -> Box<dyn BufRead> {
+    let file =
+        std::fs::File::open(file_path).unwrap_or_else(|e| panic!("Failed to open file: {e}"));
+
+    if file_path.extension().take().unwrap() == "gz" {
+        let gz = GzDecoder::new(file);
+        return Box::new(BufReader::new(gz));
+    }
+
+    Box::new(BufReader::new(file))
+}
+
+fn is_fastq(first_line: &str) -> bool {
     first_line.chars().next().take().unwrap() == '@'
 }
 
-fn is_fasta(first_line: &String) -> bool {
+fn is_fasta(first_line: &str) -> bool {
     first_line.chars().next().take().unwrap() == '>'
 }

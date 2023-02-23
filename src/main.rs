@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic)]
 use clap::Parser;
 use std::path::PathBuf;
 
