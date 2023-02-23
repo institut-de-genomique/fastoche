@@ -5,6 +5,8 @@ use std::path::PathBuf;
 mod parser;
 use parser::parse;
 
+mod metrics;
+
 #[derive(Parser)]
 #[command(author="Benjamin Istace",
     about="Computes statistics about Fastx files that are gzipped or not",
@@ -29,5 +31,5 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    parse(&args.files);
+    parse(&args.files, args.min_size);
 }
