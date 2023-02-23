@@ -2,23 +2,9 @@ use flate2::read::GzDecoder;
 use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
-pub trait CorrectReader {
-    fn ok();
-}
-
-impl<R> CorrectReader for bio::io::fasta::Reader<R>
-where
-    R: Read,
-{
-    fn ok() {}
-}
-
-impl<R> CorrectReader for bio::io::fastq::Reader<R>
-where
-    R: Read,
-{
-    fn ok() {}
-}
+trait FastxParser {}
+impl<R> FastxParser for bio::io::fasta::Reader<R> where R: Read {}
+impl<R> FastxParser for bio::io::fastq::Reader<R> where R: Read {}
 
 pub fn parse(files: &[PathBuf]) {
     for f in files.iter() {
@@ -34,7 +20,7 @@ fn compute_stats(file: &Path) {
     get_correct_reader(file);
 }
 
-fn get_correct_reader(file_path: &Path) -> Box<dyn BufRead> {
+fn get_correct_reader(file_path: &Path) -> Box<dyn FastxParser> {
     let file =
         std::fs::File::open(file_path).unwrap_or_else(|e| panic!("Failed to open file: {e}"));
 
