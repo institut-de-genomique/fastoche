@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use tabled::Tabled;
+
+#[derive(Debug, Tabled)]
 pub struct Metrics {
     pub cumul: usize,
     pub number: usize,
@@ -14,7 +16,9 @@ pub struct Metrics {
     pub l80: usize,
     pub n90: usize,
     pub l90: usize,
+    #[tabled(skip)]
     pub seq_sizes: Vec<usize>,
+    #[tabled(skip)]
     pub nucleotide_counts: [usize; 256],
 }
 
@@ -50,7 +54,7 @@ impl Metrics {
         self.compute_avg_size();
         self.compute_number_n();
         self.compute_number_gc();
-        self.compute_aun();
+        self.compute_aun_and_nx_metrics();
 
         self.seq_sizes = Vec::new();
     }
@@ -86,10 +90,43 @@ impl Metrics {
             self.nucleotide_counts[b'G' as usize] + self.nucleotide_counts[b'C' as usize];
     }
 
-    fn compute_aun(&mut self) {
+    fn compute_aun_and_nx_metrics(&mut self) {
+        let breakpoints: Vec<usize> = vec![
+            (0.5 * self.cumul as f64) as usize,
+            (0.8 * self.cumul as f64) as usize,
+            (0.9 * self.cumul as f64) as usize,
+            (1.1 * self.cumul as f64) as usize,
+        ];
+        let mut current_breakpoint: usize = 0;
+        let mut current_lx = 0;
+        let mut cumul: usize = 0;
+
         for size in &self.seq_sizes {
+            cumul += *size;
+            current_lx += 1;
             self.aun += f64::powi(*size as f64, 2 as i32) as usize;
+
+            if cumul >= breakpoints[current_breakpoint] {
+                match current_breakpoint {
+                    0 => {
+                        self.n50 = *size;
+                        self.l50 = current_lx;
+                    }
+                    1 => {
+                        self.n80 = *size;
+                        self.l80 = current_lx;
+                    }
+                    2 => {
+                        self.n90 = *size;
+                        self.l90 = current_lx;
+                    }
+                    _ => {}
+                }
+
+                current_breakpoint += 1;
+            }
         }
+
         self.aun = (self.aun as f64 / self.cumul as f64) as usize;
     }
 }
