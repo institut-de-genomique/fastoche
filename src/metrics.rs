@@ -20,7 +20,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub fn new(filename: &String) -> Self {
+    pub fn new(filename: &str) -> Self {
         let basename = filename
             .split('/')
             .last()

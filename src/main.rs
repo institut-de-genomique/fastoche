@@ -29,9 +29,17 @@ struct Args {
         help = "Sequences shorter than this number will not be processed."
     )]
     min_size: usize,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Activate parsable mode (csv format)"
+    )]
+    parsable: bool,
 }
 
 fn main() {
     let args = Args::parse();
-    parse(&args.files, args.min_size);
+    parse(&args.files, args.min_size, args.parsable);
 }

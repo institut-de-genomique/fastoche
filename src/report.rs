@@ -1,9 +1,7 @@
 use crate::formatted_metrics::FormattedMetrics;
 use crate::metrics::Metrics;
-use tabled::object::{Columns, InversionCombination, Object, Rows, Segment};
-use tabled::{
-    builder, formatting::AlignmentStrategy, Alignment, Disable, Modify, Rotate, Style, Table,
-};
+use tabled::object::{Columns, Object, Rows};
+use tabled::{Alignment, Disable, Modify, Style, Table};
 
 pub fn print_report(metrics_vec: &[Metrics]) {
     let fmt = metrics_vec
@@ -11,12 +9,7 @@ pub fn print_report(metrics_vec: &[Metrics]) {
         .map(FormattedMetrics::from_metrics)
         .collect::<Vec<FormattedMetrics>>();
 
-    let names = metrics_vec
-        .iter()
-        .map(|metrics| metrics.filename.clone())
-        .collect::<Vec<String>>();
-
-    let mut builder = Table::builder(fmt);
+    let builder = Table::builder(fmt);
     let mut index = builder.index();
     index.transpose();
     let mut table = index.build();

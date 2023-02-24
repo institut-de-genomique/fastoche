@@ -3,12 +3,15 @@ use crate::report::print_report;
 use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
 
-pub fn parse(files: &[PathBuf], min_size: usize) {
+pub fn parse(files: &[PathBuf], min_size: usize, parsable: bool) {
     let mut metrics_vec = Vec::new();
     for f in files.iter() {
         metrics_vec.push(compute_stats(f, min_size));
     }
-    print_report(&metrics_vec);
+
+    if !parsable {
+        print_report(&metrics_vec);
+    }
 }
 
 fn compute_stats(file_path: &Path, min_size: usize) -> Metrics {
