@@ -19,6 +19,8 @@ pub struct Metrics {
     pub l90: usize,
     pub seq_sizes: Vec<usize>,
     pub nucleotide_counts: [usize; 256],
+    pub mean_qualities: Vec<f64>,
+    pub mean_quality: usize,
 }
 
 impl Metrics {
@@ -51,6 +53,8 @@ impl Metrics {
             l90: 0,
             seq_sizes: Vec::new(),
             nucleotide_counts: [0; 256],
+            mean_qualities: Vec::new(),
+            mean_quality: 0,
         }
     }
 
@@ -67,6 +71,8 @@ impl Metrics {
         self.compute_aun_and_nx_metrics();
 
         self.seq_sizes = Vec::new();
+
+        self.compute_mean_quality();
     }
 
     fn compute_seq_number(&mut self) {
@@ -139,6 +145,17 @@ impl Metrics {
 
         self.aun = (self.aun as f64 / self.cumul as f64) as usize;
     }
+
+    fn compute_mean_quality(&mut self) {
+        let mut mean_quality: f64 = 0.0;
+        for q in &self.mean_qualities {
+            mean_quality += q;
+        }
+        mean_quality /= self.mean_qualities.len() as f64;
+        self.mean_quality = mean_quality as usize;
+
+        self.mean_qualities = Vec::new();
+    }
 }
 
 impl Index<&str> for Metrics {
@@ -160,6 +177,7 @@ impl Index<&str> for Metrics {
             "l80" => &self.l80,
             "n90" => &self.n90,
             "l90" => &self.l90,
+            "mean_quality" => &self.mean_quality,
             _ => panic!("Unknown field: {index}"),
         }
     }

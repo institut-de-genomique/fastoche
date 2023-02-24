@@ -33,6 +33,14 @@ struct Args {
     #[arg(
         short,
         long,
+        default_value_t = 33,
+        help = "Phred quality offset (usually 33 or 64)"
+    )]
+    quality: u8,
+
+    #[arg(
+        short,
+        long,
         default_value_t = false,
         help = "Activate parsable mode (csv format with metrics as rows)"
     )]
@@ -49,5 +57,11 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    parse(&args.files, args.min_size, args.parsable, args.csv);
+    parse(
+        &args.files,
+        args.min_size,
+        args.quality,
+        args.parsable,
+        args.csv,
+    );
 }

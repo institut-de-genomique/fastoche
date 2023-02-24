@@ -32,6 +32,9 @@ pub struct FormattedMetrics {
     pub number_n: String,
     #[tabled(rename = "GC Number")]
     pub number_gc: String,
+
+    #[tabled(rename = "Mean quality")]
+    pub mean_quality: String,
 }
 
 impl FormattedMetrics {
@@ -67,6 +70,7 @@ impl FormattedMetrics {
             n50_l50,
             n80_l80,
             n90_l90,
+            mean_quality: metrics.mean_quality.separate_with_commas(),
         }
     }
 }
