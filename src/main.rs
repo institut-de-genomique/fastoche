@@ -34,12 +34,20 @@ struct Args {
         short,
         long,
         default_value_t = false,
-        help = "Activate parsable mode (csv format)"
+        help = "Activate parsable mode (csv format with metrics as rows)"
+    )]
+    csv: bool,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Activate parsable mode (csv format with metrics as columns)"
     )]
     parsable: bool,
 }
 
 fn main() {
     let args = Args::parse();
-    parse(&args.files, args.min_size, args.parsable);
+    parse(&args.files, args.min_size, args.parsable, args.csv);
 }

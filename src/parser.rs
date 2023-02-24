@@ -1,22 +1,26 @@
-use crate::metrics::Metrics;
-use crate::report::print_report;
+use crate::report::print;
+use crate::{metrics::Metrics, report::print_csv, report::print_parsable};
 use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
 
-pub fn parse(files: &[PathBuf], min_size: usize, parsable: bool) {
+pub fn parse(files: &[PathBuf], min_size: usize, parsable: bool, csv: bool) {
     let mut metrics_vec = Vec::new();
     for f in files.iter() {
         metrics_vec.push(compute_stats(f, min_size));
     }
 
-    if !parsable {
-        print_report(&metrics_vec);
+    if csv {
+        print_csv(&metrics_vec);
+    } else if parsable {
+        print_parsable(&metrics_vec);
+    } else {
+        print(&metrics_vec);
     }
 }
 
 fn compute_stats(file_path: &Path, min_size: usize) -> Metrics {
     let mut reader = get_reader(file_path);
-    let mut metrics = Metrics::new(&file_path.to_str().unwrap().to_string());
+    let mut metrics = Metrics::new(file_path.to_str().unwrap());
 
     while let Some(record) = reader.next() {
         let record = record.expect("Error");

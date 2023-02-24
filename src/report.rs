@@ -3,7 +3,24 @@ use crate::metrics::Metrics;
 use tabled::object::{Columns, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
 
-pub fn print_report(metrics_vec: &[Metrics]) {
+const FIELDS: [&str; 14] = [
+    "cumul",
+    "number",
+    "min_size",
+    "max_size",
+    "avg_size",
+    "aun",
+    "number_n",
+    "number_gc",
+    "n50",
+    "l50",
+    "n80",
+    "l80",
+    "n90",
+    "l90",
+];
+
+pub fn print(metrics_vec: &[Metrics]) {
     let fmt = metrics_vec
         .iter()
         .map(FormattedMetrics::from_metrics)
@@ -23,4 +40,36 @@ pub fn print_report(metrics_vec: &[Metrics]) {
         .with(Disable::row(Rows::first()));
 
     println!("{styled_table}");
+}
+
+pub fn print_csv(metrics_vec: &[Metrics]) {
+    print!("filename");
+    for m in metrics_vec.iter() {
+        print!(",{}", m.filename);
+    }
+
+    for f in FIELDS {
+        print!("\n{f}");
+        for m in metrics_vec {
+            print!(",{}", m[f]);
+        }
+    }
+
+    println!();
+}
+
+pub fn print_parsable(metrics_vec: &[Metrics]) {
+    print!("filename");
+    for f in FIELDS {
+        print!(",{f}");
+    }
+    println!();
+
+    for m in metrics_vec {
+        print!("{}", m.filename);
+        for f in FIELDS {
+            print!(",{}", m[f]);
+        }
+        println!();
+    }
 }

@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 #[derive(Debug)]
 pub struct Metrics {
     pub filename: String,
@@ -136,5 +138,29 @@ impl Metrics {
         }
 
         self.aun = (self.aun as f64 / self.cumul as f64) as usize;
+    }
+}
+
+impl Index<&str> for Metrics {
+    type Output = usize;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        match index {
+            "cumul" => &self.cumul,
+            "number" => &self.number,
+            "min_size" => &self.min_size,
+            "max_size" => &self.max_size,
+            "avg_size" => &self.avg_size,
+            "aun" => &self.aun,
+            "number_n" => &self.number_n,
+            "number_gc" => &self.number_gc,
+            "n50" => &self.n50,
+            "l50" => &self.l50,
+            "n80" => &self.n80,
+            "l80" => &self.l80,
+            "n90" => &self.n90,
+            "l90" => &self.l90,
+            _ => panic!("Unknown field: {index}"),
+        }
     }
 }
