@@ -5,7 +5,9 @@ use std::path::PathBuf;
 mod parser;
 use parser::parse;
 
+mod formatted_metrics;
 mod metrics;
+mod report;
 
 #[derive(Parser)]
 #[command(author="Benjamin Istace",

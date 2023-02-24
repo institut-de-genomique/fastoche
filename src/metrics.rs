@@ -1,7 +1,6 @@
-use tabled::Tabled;
-
-#[derive(Debug, Tabled)]
+#[derive(Debug)]
 pub struct Metrics {
+    pub filename: String,
     pub cumul: usize,
     pub number: usize,
     pub min_size: usize,
@@ -16,15 +15,24 @@ pub struct Metrics {
     pub l80: usize,
     pub n90: usize,
     pub l90: usize,
-    #[tabled(skip)]
     pub seq_sizes: Vec<usize>,
-    #[tabled(skip)]
     pub nucleotide_counts: [usize; 256],
 }
 
 impl Metrics {
-    pub fn new() -> Self {
+    pub fn new(filename: &String) -> Self {
+        let basename = filename
+            .split('/')
+            .last()
+            .expect("Could not get last element")
+            .replace(".fasta", "")
+            .replace(".fastq", "")
+            .replace(".fa", "")
+            .replace(".fq", "")
+            .replace(".gz", "");
+
         Metrics {
+            filename: basename,
             cumul: 0,
             number: 0,
             min_size: 0,

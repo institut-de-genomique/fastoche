@@ -1,17 +1,19 @@
 use crate::metrics::Metrics;
+use crate::report::print_report;
 use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
-use tabled::{builder, object::Rows, Disable, Rotate, Style, Table};
 
 pub fn parse(files: &[PathBuf], min_size: usize) {
+    let mut metrics_vec = Vec::new();
     for f in files.iter() {
-        compute_stats(f, min_size);
+        metrics_vec.push(compute_stats(f, min_size));
     }
+    print_report(&metrics_vec);
 }
 
-fn compute_stats(file_path: &Path, min_size: usize) {
+fn compute_stats(file_path: &Path, min_size: usize) -> Metrics {
     let mut reader = get_reader(file_path);
-    let mut metrics = Metrics::new();
+    let mut metrics = Metrics::new(&file_path.to_str().unwrap().to_string());
 
     while let Some(record) = reader.next() {
         let record = record.expect("Error");
@@ -28,34 +30,7 @@ fn compute_stats(file_path: &Path, min_size: usize) {
     }
 
     metrics.compute();
-
-    // let table = Table::new(vec![metrics])
-    //     .with(Disable::row(Rows::first()))
-    //     .with(Rotate::Left)
-    //     // .with(Rotate::Top)
-    //     .with(Style::empty())
-    //     .to_string();
-
-    let mut builder = Table::builder(vec![metrics]);
-    let mut index = builder.index();
-    index.transpose();
-
-    let mut table = index.build();
-    let style = Style::modern()
-        .off_horizontal()
-        .off_vertical()
-        .horizontals([
-            tabled::style::HorizontalLine::new(1, Style::modern().get_horizontal())
-                .main(Some('═'))
-                .intersection(None),
-        ])
-        .verticals([tabled::style::VerticalLine::new(
-            1,
-            Style::modern().get_vertical(),
-        )]);
-    let styled_table = table.with(style);
-
-    println!("{styled_table}");
+    metrics
 }
 
 fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
