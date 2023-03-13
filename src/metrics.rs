@@ -165,7 +165,7 @@ impl Metrics {
                 current_breakpoint += 1;
             }
 
-            if cumul >= breakpoints_g[current_breakpoint_g] {
+            if self.genome_size > 0 && cumul >= breakpoints_g[current_breakpoint_g] {
                 match current_breakpoint_g {
                     0 => {
                         self.ng50 = *size;
