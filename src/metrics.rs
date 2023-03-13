@@ -3,6 +3,7 @@ use std::ops::Index;
 #[derive(Debug)]
 pub struct Metrics {
     pub filename: String,
+    pub genome_size: i64,
     pub cumul: usize,
     pub number: usize,
     pub min_size: usize,
@@ -17,6 +18,12 @@ pub struct Metrics {
     pub l80: usize,
     pub n90: usize,
     pub l90: usize,
+    pub ng50: usize,
+    pub lg50: usize,
+    pub ng80: usize,
+    pub lg80: usize,
+    pub ng90: usize,
+    pub lg90: usize,
     pub seq_sizes: Vec<usize>,
     pub nucleotide_counts: [usize; 256],
     pub mean_qualities: Vec<f64>,
@@ -24,7 +31,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub fn new(filename: &str) -> Self {
+    pub fn new(filename: &str, genome_size: i64) -> Self {
         let basename = filename
             .split('/')
             .last()
@@ -37,6 +44,7 @@ impl Metrics {
 
         Metrics {
             filename: basename,
+            genome_size,
             cumul: 0,
             number: 0,
             min_size: 0,
@@ -51,6 +59,12 @@ impl Metrics {
             l80: 0,
             n90: 0,
             l90: 0,
+            ng50: 0,
+            lg50: 0,
+            ng80: 0,
+            lg80: 0,
+            ng90: 0,
+            lg90: 0,
             seq_sizes: Vec::new(),
             nucleotide_counts: [0; 256],
             mean_qualities: Vec::new(),
@@ -113,13 +127,22 @@ impl Metrics {
             (0.9 * self.cumul as f64) as usize,
             (1.1 * self.cumul as f64) as usize,
         ];
+        let breakpoints_g: Vec<usize> = vec![
+            (0.5 * self.genome_size as f64) as usize,
+            (0.8 * self.genome_size as f64) as usize,
+            (0.9 * self.genome_size as f64) as usize,
+            (1.1 * self.genome_size as f64) as usize,
+        ];
         let mut current_breakpoint: usize = 0;
+        let mut current_breakpoint_g: usize = 0;
         let mut current_lx = 0;
+        let mut current_lx_g = 0;
         let mut cumul: usize = 0;
 
         for size in &self.seq_sizes {
             cumul += *size;
             current_lx += 1;
+            current_lx_g += 1;
             self.aun += f64::powi(*size as f64, 2 as i32) as usize;
 
             if cumul >= breakpoints[current_breakpoint] {
@@ -140,6 +163,26 @@ impl Metrics {
                 }
 
                 current_breakpoint += 1;
+            }
+
+            if cumul >= breakpoints_g[current_breakpoint_g] {
+                match current_breakpoint_g {
+                    0 => {
+                        self.ng50 = *size;
+                        self.lg50 = current_lx_g;
+                    }
+                    1 => {
+                        self.ng80 = *size;
+                        self.lg80 = current_lx_g;
+                    }
+                    2 => {
+                        self.ng90 = *size;
+                        self.lg90 = current_lx_g;
+                    }
+                    _ => {}
+                }
+
+                current_breakpoint_g += 1;
             }
         }
 

@@ -3,10 +3,17 @@ use crate::{metrics::Metrics, report::print_csv, report::print_parsable};
 use flate2::read::GzDecoder;
 use std::path::{Path, PathBuf};
 
-pub fn parse(files: &[PathBuf], min_size: usize, qual_offset: u8, parsable: bool, csv: bool) {
+pub fn parse(
+    files: &[PathBuf],
+    min_size: usize,
+    genome_size: i64,
+    qual_offset: u8,
+    parsable: bool,
+    csv: bool,
+) {
     let mut metrics_vec = Vec::new();
     for f in files.iter() {
-        metrics_vec.push(compute_stats(f, min_size, qual_offset));
+        metrics_vec.push(compute_stats(f, min_size, genome_size, qual_offset));
     }
 
     if csv {
@@ -18,9 +25,9 @@ pub fn parse(files: &[PathBuf], min_size: usize, qual_offset: u8, parsable: bool
     }
 }
 
-fn compute_stats(file_path: &Path, min_size: usize, qual_offset: u8) -> Metrics {
+fn compute_stats(file_path: &Path, min_size: usize, genome_size: i64, qual_offset: u8) -> Metrics {
     let mut reader = get_reader(file_path);
-    let mut metrics = Metrics::new(file_path.to_str().unwrap());
+    let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size);
 
     while let Some(record) = reader.next() {
         let record = record.expect("Error");

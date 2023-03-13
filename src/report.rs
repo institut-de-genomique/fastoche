@@ -3,7 +3,7 @@ use crate::metrics::Metrics;
 use tabled::object::{Columns, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
 
-const FIELDS: [&str; 15] = [
+const FIELDS: [&str; 21] = [
     "cumul",
     "number",
     "min_size",
@@ -18,6 +18,12 @@ const FIELDS: [&str; 15] = [
     "l80",
     "n90",
     "l90",
+    "ng50",
+    "lg50",
+    "ng80",
+    "lg80",
+    "ng90",
+    "lg90",
     "mean_quality",
 ];
 
