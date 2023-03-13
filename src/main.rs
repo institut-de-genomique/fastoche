@@ -33,7 +33,7 @@ struct Args {
     #[arg(
         short,
         default_value_t = 0,
-        help = "Estimated genome size to compute NGX metrics."
+        help = "Estimated genome size to compute NGX metrics (in bases)."
     )]
     genome_size: i64,
 
