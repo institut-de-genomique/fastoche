@@ -82,6 +82,22 @@ impl FormattedMetrics {
         ng90_lg90.push_str(&metrics.lg90.separate_with_commas());
         ng90_lg90.push(')');
 
+        let mut number_n = String::new();
+        number_n.push_str(&metrics.number_n.separate_with_commas());
+        number_n.push_str(" (");
+        number_n.push_str(
+            &((metrics.number_n as f64 / metrics.cumul as f64) * 100.0).separate_with_commas(),
+        );
+        number_n.push_str("%)");
+
+        let mut number_gc = String::new();
+        number_gc.push_str(&metrics.number_gc.separate_with_commas());
+        number_gc.push_str(" (");
+        number_gc.push_str(
+            &((metrics.number_gc as f64 / metrics.cumul as f64) * 100.0).separate_with_commas(),
+        );
+        number_gc.push_str("%)");
+
         Self {
             basename: metrics.filename.clone(),
             cumul: metrics.cumul.separate_with_commas(),
@@ -90,8 +106,8 @@ impl FormattedMetrics {
             max_size: metrics.max_size.separate_with_commas(),
             avg_size: metrics.avg_size.separate_with_commas(),
             aun: metrics.aun.separate_with_commas(),
-            number_n: metrics.number_n.separate_with_commas(),
-            number_gc: metrics.number_gc.separate_with_commas(),
+            number_n,
+            number_gc,
             n50_l50,
             n80_l80,
             n90_l90,
