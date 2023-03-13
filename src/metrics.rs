@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::{fmt::Display, ops::Index};
 
 #[derive(Debug)]
 pub struct Metrics {
@@ -207,8 +207,12 @@ impl Metrics {
     }
 }
 
+pub trait Num: Display {}
+impl Num for usize {}
+impl Num for f64 {}
+
 impl Index<&str> for Metrics {
-    type Output = usize;
+    type Output = dyn Num;
 
     fn index(&self, index: &str) -> &Self::Output {
         match index {
@@ -219,13 +223,21 @@ impl Index<&str> for Metrics {
             "avg_size" => &self.avg_size,
             "aun" => &self.aun,
             "number_n" => &self.number_n,
+            "percent_n" => &self.percent_n,
             "number_gc" => &self.number_gc,
+            "percent_gc" => &self.percent_gc,
             "n50" => &self.n50,
             "l50" => &self.l50,
             "n80" => &self.n80,
             "l80" => &self.l80,
             "n90" => &self.n90,
             "l90" => &self.l90,
+            "ng50" => &self.n50,
+            "lg50" => &self.l50,
+            "ng80" => &self.n80,
+            "lg80" => &self.l80,
+            "ng90" => &self.n90,
+            "lg90" => &self.l90,
             "mean_quality" => &self.mean_quality,
             _ => panic!("Unknown field: {index}"),
         }

@@ -60,7 +60,7 @@ pub fn print_csv(metrics_vec: &[Metrics]) {
     for f in FIELDS {
         print!("\n{f}");
         for m in metrics_vec {
-            print!(",{}", m[f]);
+            print!(",{}", &m[f]);
         }
     }
 
@@ -77,7 +77,7 @@ pub fn print_parsable(metrics_vec: &[Metrics]) {
     for m in metrics_vec {
         print!("{}", m.filename);
         for f in FIELDS {
-            print!(",{}", m[f]);
+            print!(",{}", &m[f]);
         }
         println!();
     }
