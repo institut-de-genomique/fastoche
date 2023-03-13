@@ -86,7 +86,8 @@ impl FormattedMetrics {
         number_n.push_str(&metrics.number_n.separate_with_commas());
         number_n.push_str(" (");
         number_n.push_str(
-            &((metrics.number_n as f64 / metrics.cumul as f64) * 100.0).separate_with_commas(),
+            &(((metrics.number_n as f64 / metrics.cumul as f64) * 100.0) as usize)
+                .separate_with_commas(),
         );
         number_n.push_str("%)");
 
@@ -94,7 +95,8 @@ impl FormattedMetrics {
         number_gc.push_str(&metrics.number_gc.separate_with_commas());
         number_gc.push_str(" (");
         number_gc.push_str(
-            &((metrics.number_gc as f64 / metrics.cumul as f64) * 100.0).separate_with_commas(),
+            &(((metrics.number_gc as f64 / metrics.cumul as f64) * 100.0) as usize)
+                .separate_with_commas(),
         );
         number_gc.push_str("%)");
 
