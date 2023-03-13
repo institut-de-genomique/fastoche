@@ -11,7 +11,9 @@ pub struct Metrics {
     pub avg_size: usize,
     pub aun: usize,
     pub number_n: usize,
+    pub percent_n: f64,
     pub number_gc: usize,
+    pub percent_gc: f64,
     pub n50: usize,
     pub l50: usize,
     pub n80: usize,
@@ -52,7 +54,9 @@ impl Metrics {
             avg_size: 0,
             aun: 0,
             number_n: 0,
+            percent_n: 0.0,
             number_gc: 0,
+            percent_gc: 0.0,
             n50: 0,
             l50: 0,
             n80: 0,
@@ -113,11 +117,13 @@ impl Metrics {
 
     fn compute_number_n(&mut self) {
         self.number_n = self.nucleotide_counts[b'N' as usize];
+        self.percent_n = (self.number_n as f64 / self.cumul as f64) * 100.0;
     }
 
     fn compute_number_gc(&mut self) {
         self.number_gc =
             self.nucleotide_counts[b'G' as usize] + self.nucleotide_counts[b'C' as usize];
+        self.percent_gc = (self.number_gc as f64 / self.cumul as f64) * 100.0;
     }
 
     fn compute_aun_and_nx_metrics(&mut self) {

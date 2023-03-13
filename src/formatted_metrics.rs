@@ -85,19 +85,13 @@ impl FormattedMetrics {
         let mut number_n = String::new();
         number_n.push_str(&metrics.number_n.separate_with_commas());
         number_n.push_str(" (");
-        number_n.push_str(
-            &(((metrics.number_n as f64 / metrics.cumul as f64) * 100.0) as usize)
-                .separate_with_commas(),
-        );
+        number_n.push_str(&format!("{:.2}", metrics.percent_n).separate_with_commas());
         number_n.push_str("%)");
 
         let mut number_gc = String::new();
         number_gc.push_str(&metrics.number_gc.separate_with_commas());
         number_gc.push_str(" (");
-        number_gc.push_str(
-            &(((metrics.number_gc as f64 / metrics.cumul as f64) * 100.0) as usize)
-                .separate_with_commas(),
-        );
+        number_gc.push_str(&format!("{:.2}", metrics.percent_gc).separate_with_commas());
         number_gc.push_str("%)");
 
         Self {
