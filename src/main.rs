@@ -32,6 +32,13 @@ struct Args {
 
     #[arg(
         short,
+        default_value_t = 0,
+        help = "Estimated genome size to compute NGX metrics (in bases)."
+    )]
+    genome_size: i64,
+
+    #[arg(
+        short,
         long,
         default_value_t = 33,
         help = "Phred quality offset (usually 33 or 64)"
@@ -60,6 +67,7 @@ fn main() {
     parse(
         &args.files,
         args.min_size,
+        args.genome_size,
         args.quality,
         args.parsable,
         args.csv,
