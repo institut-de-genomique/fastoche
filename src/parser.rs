@@ -62,12 +62,13 @@ fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
 
     let file =
         std::fs::File::open(file_path).unwrap_or_else(|e| panic!("Failed to open file: {e}"));
+    let buf_reader = std::io::BufReader::new(file);
 
     let reader = if file_path.extension().take().unwrap() == "gz" {
-        let gz = GzDecoder::new(file);
+        let gz = GzDecoder::new(buf_reader);
         needletail::parse_fastx_reader(gz).unwrap()
     } else {
-        needletail::parse_fastx_reader(file).unwrap()
+        needletail::parse_fastx_reader(buf_reader).unwrap()
     };
 
     reader
