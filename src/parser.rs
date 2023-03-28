@@ -76,7 +76,8 @@ fn compute_stats(
                     .seq()
                     .iter()
                     .filter(|c| **c == b'G' || **c == b'C')
-                    .count();
+                    .count()
+                    * 100;
 
                 write!(
                     writer,
