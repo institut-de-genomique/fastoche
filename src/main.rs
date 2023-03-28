@@ -60,6 +60,12 @@ struct Args {
         help = "Activate parsable mode (csv format with metrics as columns)"
     )]
     parsable: bool,
+
+    #[arg(
+        long,
+        help = "Activate per sequence metrics mode. Provide a path to a file to store the metrics."
+    )]
+    per_seq: Option<PathBuf>,
 }
 
 fn main() {
@@ -71,5 +77,6 @@ fn main() {
         args.quality,
         args.parsable,
         args.csv,
+        args.per_seq,
     );
 }

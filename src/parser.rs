@@ -1,6 +1,7 @@
 use crate::report::print;
 use crate::{metrics::Metrics, report::print_csv, report::print_parsable};
 use flate2::read::GzDecoder;
+use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 pub fn parse(
@@ -10,10 +11,24 @@ pub fn parse(
     qual_offset: u8,
     parsable: bool,
     csv: bool,
+    per_seq: Option<PathBuf>,
 ) {
+    let mut per_seq_writer: Option<BufWriter<std::fs::File>> = None;
+    if let Some(path) = per_seq {
+        let file =
+            std::fs::File::create(path).unwrap_or_else(|e| panic!("Failed to create file: {e}"));
+        per_seq_writer = Some(BufWriter::new(file));
+    }
+
     let mut metrics_vec = Vec::new();
     for f in files.iter() {
-        metrics_vec.push(compute_stats(f, min_size, genome_size, qual_offset));
+        metrics_vec.push(compute_stats(
+            f,
+            min_size,
+            genome_size,
+            qual_offset,
+            &mut per_seq_writer,
+        ));
     }
 
     if csv {
@@ -25,7 +40,13 @@ pub fn parse(
     }
 }
 
-fn compute_stats(file_path: &Path, min_size: usize, genome_size: i64, qual_offset: u8) -> Metrics {
+fn compute_stats(
+    file_path: &Path,
+    min_size: usize,
+    genome_size: i64,
+    qual_offset: u8,
+    per_seq_writer: &mut Option<BufWriter<std::fs::File>>,
+) -> Metrics {
     let mut reader = get_reader(file_path);
     let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size);
 
@@ -47,6 +68,27 @@ fn compute_stats(file_path: &Path, min_size: usize, genome_size: i64, qual_offse
             for q in qualities {
                 avg_quality += (q - qual_offset) as f64;
             }
+
+            if let Some(writer) = per_seq_writer {
+                let record_id = std::str::from_utf8(record.id()).unwrap();
+
+                let record_gc = record
+                    .seq()
+                    .iter()
+                    .filter(|c| **c == b'G' || **c == b'C')
+                    .count();
+
+                write!(
+                    writer,
+                    "{}\t{}\t{}\t{}",
+                    record_id,
+                    record_len,
+                    &format!("{:.2}", record_gc as f64 / record_len as f64),
+                    avg_quality,
+                )
+                .unwrap();
+            }
+
             metrics
                 .mean_qualities
                 .push(avg_quality as f64 / record_len as f64);
