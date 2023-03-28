@@ -85,7 +85,7 @@ fn compute_stats(
                     record_id,
                     record_len,
                     &format!("{:.2}", record_gc as f64 / record_len as f64),
-                    avg_quality as f64 / record_len as f64,
+                    &format!("{:.2}", avg_quality as f64 / record_len as f64),
                 )
                 .unwrap();
             }
