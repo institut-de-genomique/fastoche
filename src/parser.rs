@@ -80,7 +80,7 @@ fn compute_stats(
 
                 write!(
                     writer,
-                    "{}\t{}\t{}\t{}",
+                    "{}\t{}\t{}\t{}\n",
                     record_id,
                     record_len,
                     &format!("{:.2}", record_gc as f64 / record_len as f64),
