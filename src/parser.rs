@@ -107,7 +107,7 @@ fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
         std::fs::File::open(file_path).unwrap_or_else(|e| panic!("Failed to open file: {e}"));
     let buf_reader = std::io::BufReader::new(file);
 
-    let reader = if file_path.extension().take().unwrap() == "gz" {
+    let reader = if file_path.extension().take().unwrap_or_else(|| panic!("File extension should not be empty! As an example, file should be named 'toto.fasta' and not 'toto'.")) == "gz" {
         let gz = GzDecoder::new(buf_reader);
         needletail::parse_fastx_reader(gz).unwrap()
     } else {
