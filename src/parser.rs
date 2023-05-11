@@ -1,6 +1,7 @@
 use crate::report::print;
 use crate::{metrics::Metrics, report::print_csv, report::print_parsable};
 use flate2::read::GzDecoder;
+use needletail::parser::SequenceRecord;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
@@ -120,8 +121,8 @@ fn compute_stats(
 
         metrics.seq_sizes.push(record_len);
         count_nucleotides(&mut metrics, &record.seq());
-        compute_avg_quality(&mut metrics, record.qual(), qual_offset);
-        write_per_seq(per_seq_writer, record.id());
+        let avg_quality = compute_avg_quality(&mut metrics, record.qual(), qual_offset);
+        write_per_seq(record, per_seq_writer, avg_quality, record_len);
     }
 
     metrics.compute();
@@ -134,9 +135,10 @@ fn count_nucleotides(metrics: &mut Metrics, seq: &[u8]) {
     }
 }
 
-fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_offset: u8) {
+fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_offset: u8) -> f64 {
+    let mut avg_quality: f64 = 0_f64;
+
     if let Some(qualities) = qualities {
-        let mut avg_quality: f64 = 0_f64;
         for q in qualities {
             avg_quality += (q - qual_offset) as f64;
         }
@@ -144,12 +146,35 @@ fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_off
             .mean_qualities
             .push(avg_quality / qualities.len() as f64);
     }
+
+    avg_quality
 }
 
-fn write_per_seq(writer: &mut Option<BufWriter<std::fs::File>>, id: &[u8]) {
+fn write_per_seq(
+    record: SequenceRecord,
+    writer: &mut Option<BufWriter<std::fs::File>>,
+    avg_quality: f64,
+    record_len: usize,
+) {
     if let Some(writer) = writer {
-        let record_id = std::str::from_utf8(id).unwrap();
-        writeln!(writer, "{}", record_id).unwrap();
+        let record_id = std::str::from_utf8(record.id()).unwrap();
+
+        let record_gc = record
+            .seq()
+            .iter()
+            .filter(|c| **c == b'G' || **c == b'C')
+            .count()
+            * 100;
+
+        write!(
+            writer,
+            "{}\t{}\t{}\t{}\n",
+            record_id,
+            record_len,
+            &format!("{:.2}", record_gc as f64 / record_len as f64),
+            &format!("{:.2}", avg_quality as f64 / record_len as f64),
+        )
+        .unwrap();
     }
 }
 
