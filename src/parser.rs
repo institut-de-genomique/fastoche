@@ -124,6 +124,7 @@ fn compute_stats(
         write_per_seq(per_seq_writer, record.id());
     }
 
+    metrics.compute();
     metrics
 }
 
@@ -167,4 +168,108 @@ fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
     };
 
     reader
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn setup_reads_metrics() -> Metrics {
+        let path = std::path::Path::new("test_inputs/reads.fastq.gz");
+
+        let mut per_seq_writer = None;
+        let metrics = compute_stats(path, 0, 0, 33, &mut per_seq_writer);
+
+        metrics
+    }
+
+    #[test]
+    fn test_reads_cumul() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.cumul, 5957360);
+    }
+
+    #[test]
+    fn test_reads_number() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.number, 1000);
+    }
+
+    #[test]
+    fn test_reads_n50() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.n50, 8383);
+    }
+
+    #[test]
+    fn test_reads_l50() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.l50, 229);
+    }
+
+    #[test]
+    fn test_reads_n80() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.n80, 4170);
+    }
+
+    #[test]
+    fn test_reads_l80() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.l80, 530);
+    }
+
+    #[test]
+    fn test_reads_n90() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.n90, 3016);
+    }
+
+    #[test]
+    fn test_reads_l90() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.l90, 697);
+    }
+
+    #[test]
+    fn test_reads_aun() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.aun, 9598);
+    }
+
+    #[test]
+    fn test_reads_min_size() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.min_size, 159);
+    }
+
+    #[test]
+    fn test_reads_avg_size() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.avg_size, 5957);
+    }
+
+    #[test]
+    fn test_reads_max_size() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.max_size, 28705);
+    }
+
+    #[test]
+    fn test_reads_number_n() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.number_n, 0);
+    }
+
+    #[test]
+    fn test_reads_number_gc() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.number_gc, 2542770);
+    }
+
+    #[test]
+    fn test_reads_mean_quality() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.mean_quality, 9);
+    }
 }
