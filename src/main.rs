@@ -18,7 +18,7 @@ struct Args {
     #[arg(
         short,
         required = true,
-        help = "Fastx files to process. Can be gzipped."
+        help = "Fastx files to process. Can be gzipped. Can be specified multiple times if you need to compute metrics on several files."
     )]
     files: Vec<PathBuf>,
 
@@ -63,7 +63,7 @@ struct Args {
 
     #[arg(
         long,
-        help = "Activate per sequence metrics mode. Provide a path to a file to store the metrics."
+        help = "Activate per sequence metrics mode. Provide a path to a file to store the metrics. WARNING: does not work for multiple input files."
     )]
     per_seq: Option<PathBuf>,
     
