@@ -66,6 +66,13 @@ struct Args {
         help = "Activate per sequence metrics mode. Provide a path to a file to store the metrics."
     )]
     per_seq: Option<PathBuf>,
+    
+    #[arg(
+        short,
+        long,
+        help="Use these names instead of inferring them. Format name_1,name_2,name_n"
+    )]
+    rename: Option<String>,
 }
 
 fn main() {
@@ -78,5 +85,6 @@ fn main() {
         args.parsable,
         args.csv,
         args.per_seq,
+        args.rename,
     );
 }

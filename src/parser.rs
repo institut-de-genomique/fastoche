@@ -13,6 +13,7 @@ pub fn parse(
     parsable: bool,
     csv: bool,
     per_seq: Option<PathBuf>,
+    rename: Option<String>,
 ) {
     let mut per_seq_writer: Option<BufWriter<std::fs::File>> = None;
     if let Some(path) = per_seq {
@@ -20,15 +21,28 @@ pub fn parse(
             std::fs::File::create(path).unwrap_or_else(|e| panic!("Failed to create file: {e}"));
         per_seq_writer = Some(BufWriter::new(file));
     }
+    
+    let splits = match rename {
+        Some(names) => {
+            Some(names.split(",").map(|s| s.to_string()).collect::<Vec<String>>())    
+        }
+        None => None
+    };
 
     let mut metrics_vec = Vec::new();
-    for f in files.iter() {
+    for (i, f) in files.iter().enumerate() {
+        let name = match splits {
+            Some(ref names) => Some(names[i].clone()),
+            None => None,
+        };
+        
         metrics_vec.push(compute_stats(
             f,
             min_size,
             genome_size,
             qual_offset,
             &mut per_seq_writer,
+            name,
         ));
     }
 
@@ -107,9 +121,10 @@ fn compute_stats(
     genome_size: i64,
     qual_offset: u8,
     per_seq_writer: &mut Option<BufWriter<std::fs::File>>,
+    name: Option<String>,
 ) -> Metrics {
     let mut reader = get_reader(file_path);
-    let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size);
+    let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size, name);
 
     while let Some(record) = reader.next() {
         let record = record.expect("Error");
@@ -203,7 +218,7 @@ mod tests {
         let path = std::path::Path::new("test_inputs/reads.fastq.gz");
 
         let mut per_seq_writer = None;
-        let metrics = compute_stats(path, 0, 0, 33, &mut per_seq_writer);
+        let metrics = compute_stats(path, 0, 0, 33, &mut per_seq_writer, None);
 
         metrics
     }

@@ -33,16 +33,19 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub fn new(filename: &str, genome_size: i64) -> Self {
-        let basename = filename
-            .split('/')
-            .last()
-            .expect("Could not get last element")
-            .replace(".fasta", "")
-            .replace(".fastq", "")
-            .replace(".fa", "")
-            .replace(".fq", "")
-            .replace(".gz", "");
+    pub fn new(filename: &str, genome_size: i64, name: Option<String>) -> Self {
+        let basename = match name {
+            Some(n) => n,
+            None => filename
+                .split('/')
+                .last()
+                .expect("Could not get last element")
+                .replace(".fasta", "")
+                .replace(".fastq", "")
+                .replace(".fa", "")
+                .replace(".fq", "")
+                .replace(".gz", "")
+        };
 
         Metrics {
             filename: basename,
