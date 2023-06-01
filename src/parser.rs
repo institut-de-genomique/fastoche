@@ -14,6 +14,8 @@ pub fn parse(
     csv: bool,
     per_seq: Option<PathBuf>,
     rename: Option<String>,
+    output_fields: Option<Vec<String>>,
+    no_header: bool,
 ) {
     let mut per_seq_writer: Option<BufWriter<std::fs::File>> = None;
     if let Some(path) = per_seq {
@@ -49,7 +51,7 @@ pub fn parse(
     if csv {
         print_csv(&metrics_vec);
     } else if parsable {
-        print_parsable(&metrics_vec);
+        print_parsable(&metrics_vec, &output_fields, no_header);
     } else {
         print(&metrics_vec);
     }
