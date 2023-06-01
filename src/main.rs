@@ -1,5 +1,6 @@
 #![warn(clippy::all, clippy::pedantic)]
 use clap::Parser;
+use report::parse_output_format;
 use std::path::PathBuf;
 
 mod parser;
@@ -57,9 +58,26 @@ struct Args {
         short,
         long,
         default_value_t = false,
+        conflicts_with = "csv",
         help = "Activate parsable mode (csv format with metrics as columns)"
     )]
     parsable: bool,
+
+    #[arg(
+        long,
+        requires = "parsable",
+        help = "(--parsable only) Comma-separated list of metrics to output"
+    )]
+    output_format: Option<String>,
+
+    #[arg(
+        long,
+        requires = "parsable",
+        requires = "output_format",
+        default_value_t = false,
+        help = "(--parsable only) Do not print a header"
+    )]
+    no_header: bool,
 
     #[arg(
         long,
@@ -77,6 +95,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
+    let output_fields = parse_output_format(&args.output_format);
     parse(
         &args.files,
         args.min_size,
@@ -86,5 +105,7 @@ fn main() {
         args.csv,
         args.per_seq,
         args.rename,
+        output_fields,
+        args.no_header,
     );
 }

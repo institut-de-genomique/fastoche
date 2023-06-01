@@ -67,18 +67,42 @@ pub fn print_csv(metrics_vec: &[Metrics]) {
     println!();
 }
 
-pub fn print_parsable(metrics_vec: &[Metrics]) {
-    print!("filename");
-    for f in FIELDS {
-        print!(",{f}");
+pub fn print_parsable(metrics_vec: &[Metrics], user_output_fields: &Option<Vec<String>>, no_header: bool) {
+    // choose the output fields
+    let default_output_fields = FIELDS.map(|x| x.to_owned()).to_vec();
+    let output_fields = match user_output_fields {
+        Some(x) => x,
+        None => &default_output_fields,
+    };
+    // maybe print a header
+    if ! no_header {        
+        print!("filename");
+        for f in output_fields {
+            print!(",{f}");
+        }
+        println!();
     }
-    println!();
-
+    // print the metrics for this file
     for m in metrics_vec {
         print!("{}", m.filename);
-        for f in FIELDS {
+        for f in output_fields {
             print!(",{}", &m[f]);
         }
         println!();
+    }
+}
+
+pub fn parse_output_format(output_format: &Option<String>) -> Option<Vec<String>> {
+    match output_format {
+        Some(format_str) => {
+            let mut output_fields = Vec::new();
+            for field in format_str.split(",") {
+                if ! FIELDS.contains(&field) { panic!("{} is not a valid field", field) }
+                output_fields.push(field.to_owned());
+            }
+            if output_fields.len() == 0 { panic!("Could not parse output format string") }
+            return Some(output_fields);
+        },
+        None => None,
     }
 }
