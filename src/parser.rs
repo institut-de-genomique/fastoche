@@ -23,21 +23,18 @@ pub fn parse(
             std::fs::File::create(path).unwrap_or_else(|e| panic!("Failed to create file: {e}"));
         per_seq_writer = Some(BufWriter::new(file));
     }
-    
-    let splits = match rename {
-        Some(names) => {
-            Some(names.split(",").map(|s| s.to_string()).collect::<Vec<String>>())    
-        }
-        None => None
-    };
+
+    let splits = rename.map(|names| {
+        names
+            .split(',')
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>()
+    });
 
     let mut metrics_vec = Vec::new();
     for (i, f) in files.iter().enumerate() {
-        let name = match splits {
-            Some(ref names) => Some(names[i].clone()),
-            None => None,
-        };
-        
+        let name = splits.as_ref().map(|names| names[i].clone());
+
         metrics_vec.push(compute_stats(
             f,
             min_size,
@@ -56,66 +53,6 @@ pub fn parse(
         print(&metrics_vec);
     }
 }
-
-// fn compute_stats(
-//     file_path: &Path,
-//     min_size: usize,
-//     genome_size: i64,
-//     qual_offset: u8,
-//     per_seq_writer: &mut Option<BufWriter<std::fs::File>>,
-// ) -> Metrics {
-//     let mut reader = get_reader(file_path);
-//     let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size);
-
-//     while let Some(record) = reader.next() {
-//         let record = record.expect("Error");
-//         let record_len = record.seq().len();
-
-//         if record_len < min_size {
-//             continue;
-//         }
-
-//         metrics.seq_sizes.push(record_len);
-//         for c in record.seq().iter() {
-//             metrics.nucleotide_counts[*c as usize] += 1;
-//         }
-
-//         if let Some(qualities) = record.qual() {
-//             let mut avg_quality: f64 = 0_f64;
-//             for q in qualities {
-//                 avg_quality += (q - qual_offset) as f64;
-//             }
-
-//             if let Some(writer) = per_seq_writer {
-//                 let record_id = std::str::from_utf8(record.id()).unwrap();
-
-//                 let record_gc = record
-//                     .seq()
-//                     .iter()
-//                     .filter(|c| **c == b'G' || **c == b'C')
-//                     .count()
-//                     * 100;
-
-//                 write!(
-//                     writer,
-//                     "{}\t{}\t{}\t{}\n",
-//                     record_id,
-//                     record_len,
-//                     &format!("{:.2}", record_gc as f64 / record_len as f64),
-//                     &format!("{:.2}", avg_quality as f64 / record_len as f64),
-//                 )
-//                 .unwrap();
-//             }
-
-//             metrics
-//                 .mean_qualities
-//                 .push(avg_quality as f64 / record_len as f64);
-//         }
-//     }
-
-//     metrics.compute();
-//     metrics
-// }
 
 fn compute_stats(
     file_path: &Path,
@@ -183,13 +120,13 @@ fn write_per_seq(
             .count()
             * 100;
 
-        write!(
+        writeln!(
             writer,
-            "{}\t{}\t{}\t{}\n",
+            "{}\t{}\t{}\t{}",
             record_id,
             record_len,
             &format!("{:.2}", record_gc as f64 / record_len as f64),
-            &format!("{:.2}", avg_quality as f64 / record_len as f64),
+            &format!("{:.2}", avg_quality / record_len as f64),
         )
         .unwrap();
     }
@@ -220,9 +157,8 @@ mod tests {
         let path = std::path::Path::new("test_inputs/reads.fastq.gz");
 
         let mut per_seq_writer = None;
-        let metrics = compute_stats(path, 0, 0, 33, &mut per_seq_writer, None);
 
-        metrics
+        compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
     }
 
     #[test]

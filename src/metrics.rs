@@ -44,7 +44,7 @@ impl Metrics {
                 .replace(".fastq", "")
                 .replace(".fa", "")
                 .replace(".fq", "")
-                .replace(".gz", "")
+                .replace(".gz", ""),
         };
 
         Metrics {
@@ -152,7 +152,7 @@ impl Metrics {
             cumul += *size;
             current_lx += 1;
             current_lx_g += 1;
-            self.aun += f64::powi(*size as f64, 2 as i32) as usize;
+            self.aun += f64::powi(*size as f64, 2_i32) as usize;
 
             if cumul >= breakpoints[current_breakpoint] {
                 match current_breakpoint {

@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic)]
 use clap::Parser;
 use report::parse_output_format;
 use std::path::PathBuf;
@@ -84,11 +83,11 @@ struct Args {
         help = "Activate per sequence metrics mode. Provide a path to a file to store the metrics. WARNING: does not work for multiple input files."
     )]
     per_seq: Option<PathBuf>,
-    
+
     #[arg(
         short,
         long,
-        help="Use these names instead of inferring them. Format name_1,name_2,name_n"
+        help = "Use these names instead of inferring them. Format name_1,name_2,name_n"
     )]
     rename: Option<String>,
 }
