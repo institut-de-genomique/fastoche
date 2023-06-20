@@ -29,17 +29,19 @@ const FIELDS: [&str; 23] = [
     "mean_quality",
 ];
 
+const OPTIONAL_FIELDS: [&str; 4] = ["ng50", "ng80", "ng90", "mean_quality"];
+
 pub fn print(metrics_vec: &[Metrics]) {
     let fmt = metrics_vec
         .iter()
         .map(FormattedMetrics::from_metrics)
         .collect::<Vec<FormattedMetrics>>();
 
-    let builder = Table::builder(fmt);
+    let builder = Table::builder(fmt.clone());
     let mut index = builder.index();
     index.transpose();
     let mut table = index.build();
-    let styled_table = table
+    let mut styled_table = table
         .with(Style::sharp())
         // Left align first column
         .with(Modify::new(Columns::first()).with(Alignment::left()))
@@ -47,6 +49,14 @@ pub fn print(metrics_vec: &[Metrics]) {
         .with(Modify::new(Columns::first().inverse()).with(Alignment::right()))
         // Disable index row
         .with(Disable::row(Rows::first()));
+
+    // Only display NGX and quality if their are greater that 0
+    if fmt[0].ng50_lg50 == "0 (0)" {
+        styled_table = styled_table.with(Disable::row(Rows::new(12..15)));
+    }
+    if fmt[0].mean_quality == "0" {
+        styled_table = styled_table.with(Disable::row(Rows::new(15..16)));
+    }
 
     println!("{styled_table}");
 }

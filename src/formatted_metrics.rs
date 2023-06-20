@@ -2,7 +2,7 @@ use crate::metrics::Metrics;
 use tabled::Tabled;
 use thousands::Separable;
 
-#[derive(Debug, Tabled)]
+#[derive(Debug, Tabled, Clone)]
 pub struct FormattedMetrics {
     #[tabled(rename = "")]
     pub basename: String,
