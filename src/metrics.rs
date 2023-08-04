@@ -140,7 +140,7 @@ impl Metrics {
             (0.5 * self.genome_size as f64) as usize,
             (0.8 * self.genome_size as f64) as usize,
             (0.9 * self.genome_size as f64) as usize,
-            (1.1 * self.genome_size as f64) as usize,
+            (1000 * self.genome_size as f64) as usize,
         ];
         let mut current_breakpoint: usize = 0;
         let mut current_breakpoint_g: usize = 0;
