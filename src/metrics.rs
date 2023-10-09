@@ -119,13 +119,16 @@ impl Metrics {
     }
 
     fn compute_number_n(&mut self) {
-        self.number_n = self.nucleotide_counts[b'N' as usize];
+        self.number_n =
+            self.nucleotide_counts[b'N' as usize] + self.nucleotide_counts[b'n' as usize];
         self.percent_n = (self.number_n as f64 / self.cumul as f64) * 100.0;
     }
 
     fn compute_number_gc(&mut self) {
-        self.number_gc =
-            self.nucleotide_counts[b'G' as usize] + self.nucleotide_counts[b'C' as usize];
+        self.number_gc = self.nucleotide_counts[b'G' as usize]
+            + self.nucleotide_counts[b'C' as usize]
+            + self.nucleotide_counts[b'g' as usize]
+            + self.nucleotide_counts[b'c' as usize];
         self.percent_gc = (self.number_gc as f64 / self.cumul as f64) * 100.0;
     }
 
