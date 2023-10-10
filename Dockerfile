@@ -1,4 +1,4 @@
-FROM rust:1.66
+FROM rust:1.72
 
 # copy the git repo to the container
 COPY . /gitlab/repo
