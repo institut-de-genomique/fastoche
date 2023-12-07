@@ -2,6 +2,7 @@ use crate::formatted_metrics::FormattedMetrics;
 use crate::metrics::Metrics;
 use tabled::object::{Columns, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
+use tabled::settings::object::LastRow;
 
 const FIELDS: [&str; 23] = [
     "cumul",
@@ -55,7 +56,7 @@ pub fn print(metrics_vec: &[Metrics]) {
         styled_table = styled_table.with(Disable::row(Rows::new(12..15)));
     }
     if fmt[0].mean_quality == "0" {
-        styled_table = styled_table.with(Disable::row(Rows::new(15..17)));
+        styled_table = styled_table.with(Disable::row(LastRow));
     }
 
     println!("{styled_table}");
