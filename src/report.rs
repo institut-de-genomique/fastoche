@@ -54,6 +54,7 @@ pub fn print(metrics_vec: &[Metrics]) {
     if fmt[0].ng50_lg50 == "0 (0)" {
         styled_table = styled_table.with(Disable::row(Rows::new(12..15)));
     }
+    println!("{:?}", fmt[0].mean_quality);
     if fmt[0].mean_quality == "0" {
         styled_table = styled_table.with(Disable::row(Rows::new(15..16)));
     }
