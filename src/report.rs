@@ -1,8 +1,7 @@
 use crate::formatted_metrics::FormattedMetrics;
 use crate::metrics::Metrics;
-use tabled::object::{Columns, Object, Rows};
+use tabled::object::{Columns, LastRow, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
-use tabled::settings::object::LastRow;
 
 const FIELDS: [&str; 23] = [
     "cumul",
@@ -30,7 +29,7 @@ const FIELDS: [&str; 23] = [
     "mean_quality",
 ];
 
-const OPTIONAL_FIELDS: [&str; 4] = ["ng50", "ng80", "ng90", "mean_quality"];
+// const OPTIONAL_FIELDS: [&str; 4] = ["ng50", "ng80", "ng90", "mean_quality"];
 
 pub fn print(metrics_vec: &[Metrics]) {
     let fmt = metrics_vec
