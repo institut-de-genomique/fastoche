@@ -110,7 +110,7 @@ impl FormattedMetrics {
             ng50_lg50,
             ng80_lg80,
             ng90_lg90,
-            mean_quality: metrics.mean_quality.separate_with_commas(),
+            mean_quality: metrics.mean_quality.to_string(),
         }
     }
 }
