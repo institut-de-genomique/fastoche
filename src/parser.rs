@@ -90,24 +90,25 @@ fn count_nucleotides(metrics: &mut Metrics, seq: &[u8]) {
 }
 
 fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_offset: u8) -> f64 {
-    let mut avg_quality: f32 = 0.0;
+    let mut sum_quality: f32 = 0.0;
+    let mut avg_quality: f64 = 0.0;
     let mut power_values = [0.0f32; 256];
 
     if let Some(qualities) = qualities {
         let len = qualities.len() as f64;
         let offset = qual_offset as f32;
 
-        for &q in qualities {
-            if power_values[q as usize] == 0.0 {
-                power_values[q as usize] = 1.0 / 10.0f32.powf((q as f32 - offset) / 10.0);
+        for q in qualities.iter().map(|q| *q as usize) {
+            if power_values[q] == 0.0 {
+                power_values[q] = 1.0 / 10.0f32.powf((q as f32 - offset) / 10.0);
             }
-            avg_quality += power_values[q as usize];
+            sum_quality += power_values[q];
         }
-        let avg: f64 = avg_quality as f64 / len;
-        metrics.mean_qualities.push(-10.0 * avg.log10());
+        avg_quality = sum_quality as f64 / len;
+        metrics.mean_qualities.push(-10.0 * avg_quality.log10());
     }
 
-    avg_quality as f64
+    avg_quality
 }
 
 fn write_per_seq(
