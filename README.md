@@ -32,7 +32,7 @@ fastoche -f reads.fastq.gz -f ../assembly.fasta -r "Reads,Assembly"
 │ Mean quality │                  9 │                    0 │
 └──────────────┴────────────────────┴──────────────────────┘
 ```
-The `-f` flag can be given as many times as needed and can contain a mix of fasta and fastq files.
+The `-f` flag can be given as many times as needed and can contain a mix of fasta and fastq files. The `Mean quality` row is shown only for Fastq files and is always equal to 0 for Fasta files, as Phred qualities are not available.
  
 
 
