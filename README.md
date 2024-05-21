@@ -4,7 +4,7 @@ Fastoche is a tool designed to effortlessly extract common metrics from Fasta or
 ## Compiling from source
 The only dependency to build the code from source is the [Rust](https://www.rust-lang.org/fr/tools/install) compiler.
 ```bash
-git clone https://github.com/institut-de-genomique/fastoche
+git clone https://gitlab.cnrgh.fr/rdbioseq/assemblage/fastoche
 cd fastoche
 cargo install --path . --root .
 ```
