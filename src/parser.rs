@@ -104,8 +104,8 @@ fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_off
             }
             sum_quality += power_values[q];
         }
-        avg_quality = sum_quality as f64 / len;
-        metrics.mean_qualities.push(-10.0 * avg_quality.log10());
+        avg_quality = -10.0 * (sum_quality as f64 / len).log10();
+        metrics.mean_qualities.push(avg_quality);
     }
 
     avg_quality
@@ -133,7 +133,7 @@ fn write_per_seq(
             record_id,
             record_len,
             &format!("{:.2}", record_gc as f64 / record_len as f64),
-            &format!("{:.2}", avg_quality / record_len as f64),
+            &format!("{:.2}", avg_quality),
         )
         .unwrap();
     }
