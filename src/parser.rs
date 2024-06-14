@@ -1,6 +1,6 @@
 use crate::report::print;
 use crate::{metrics::Metrics, report::print_csv, report::print_parsable};
-use flate2::read::GzDecoder;
+use flate2::bufread::MultiGzDecoder;
 use needletail::parser::SequenceRecord;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -140,7 +140,7 @@ fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
     let buf_reader = std::io::BufReader::new(file);
 
     let reader = if file_path.extension().take().unwrap_or_else(|| panic!("File extension should not be empty! As an example, file should be named 'toto.fasta' and not 'toto'.")) == "gz" {
-        let gz = GzDecoder::new(buf_reader);
+        let gz = MultiGzDecoder::new(buf_reader);
         needletail::parse_fastx_reader(gz).unwrap()
     } else {
         needletail::parse_fastx_reader(buf_reader).unwrap()
