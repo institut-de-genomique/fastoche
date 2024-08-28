@@ -3,12 +3,13 @@ use crate::metrics::Metrics;
 use tabled::object::{Columns, LastRow, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
 
-const FIELDS: [&str; 23] = [
+const FIELDS: [&str; 24] = [
     "cumul",
     "number",
     "min_size",
     "max_size",
     "avg_size",
+    "med_size",
     "aun",
     "number_n",
     "percent_n",

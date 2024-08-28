@@ -25,6 +25,8 @@ pub struct FormattedMetrics {
     pub max_size: String,
     #[tabled(rename = "Avg. size")]
     pub avg_size: String,
+    #[tabled(rename = "Med. size")]
+    pub med_size: String,
     #[tabled(rename = "auN")]
     pub aun: String,
 
@@ -101,6 +103,7 @@ impl FormattedMetrics {
             min_size: metrics.min_size.separate_with_commas(),
             max_size: metrics.max_size.separate_with_commas(),
             avg_size: metrics.avg_size.separate_with_commas(),
+            med_size: metrics.med_size.separate_with_commas(),
             aun: metrics.aun.separate_with_commas(),
             number_n,
             number_gc,

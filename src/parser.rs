@@ -228,6 +228,12 @@ mod tests {
     }
 
     #[test]
+    fn test_reads_med_size() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.med_size, 4423);
+    }
+
+    #[test]
     fn test_reads_max_size() {
         let metrics = setup_reads_metrics();
         assert_eq!(metrics.max_size, 28705);

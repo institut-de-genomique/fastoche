@@ -9,6 +9,7 @@ pub struct Metrics {
     pub min_size: usize,
     pub max_size: usize,
     pub avg_size: usize,
+    pub med_size: usize,
     pub aun: usize,
     pub number_n: usize,
     pub percent_n: f64,
@@ -55,6 +56,7 @@ impl Metrics {
             min_size: 0,
             max_size: 0,
             avg_size: 0,
+            med_size: 0,
             aun: 0,
             number_n: 0,
             percent_n: 0.0,
@@ -87,6 +89,7 @@ impl Metrics {
         self.compute_min_size();
         self.compute_max_size();
         self.compute_avg_size();
+        self.compute_med_size();
         self.compute_number_n();
         self.compute_number_gc();
         self.compute_aun_and_nx_metrics();
@@ -116,6 +119,11 @@ impl Metrics {
 
     fn compute_avg_size(&mut self) {
         self.avg_size = self.seq_sizes.iter().sum::<usize>() / self.number;
+    }
+
+    fn compute_med_size(&mut self) {
+        let mid = self.seq_sizes.len() / 2;
+        self.med_size = self.seq_sizes[mid];
     }
 
     fn compute_number_n(&mut self) {
@@ -227,6 +235,7 @@ impl Index<&str> for Metrics {
             "min_size" => &self.min_size,
             "max_size" => &self.max_size,
             "avg_size" => &self.avg_size,
+            "med_size" => &self.med_size,
             "aun" => &self.aun,
             "number_n" => &self.number_n,
             "percent_n" => &self.percent_n,

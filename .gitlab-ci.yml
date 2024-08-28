@@ -1,0 +1,16 @@
+stages:
+  - deploy
+
+variables:
+  deploygroup: "rdbioseq"
+  modulename: "fastoche"
+  moduleversion: "1.2"
+  modulesnapshot: "true"
+  
+deploy-modules:
+  stage: deploy
+  variables:
+    PROJECT_PATH: $CI_PROJECT_PATH
+  trigger:
+    project: modules/modules
+    strategy: depend
