@@ -31,6 +31,7 @@ pub struct Metrics {
     pub nucleotide_counts: [usize; 256],
     pub mean_qualities: Vec<f64>,
     pub mean_quality: usize,
+    pub median_quality: usize,
 }
 
 impl Metrics {
@@ -78,6 +79,7 @@ impl Metrics {
             nucleotide_counts: [0; 256],
             mean_qualities: Vec::new(),
             mean_quality: 0,
+            median_quality: 0,
         }
     }
 
@@ -96,6 +98,7 @@ impl Metrics {
 
         self.seq_sizes = Vec::new();
 
+        self.compute_median_quality();
         self.compute_mean_quality();
     }
 
@@ -209,6 +212,24 @@ impl Metrics {
         self.aun = (self.aun as f64 / self.cumul as f64) as usize;
     }
 
+    fn compute_median_quality(&mut self) {
+        if self.mean_qualities.is_empty() {
+            self.median_quality = 0;
+            return;
+        }
+
+        self.mean_qualities.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let len = self.mean_qualities.len();
+        let median_quality = if len % 2 == 0 {
+            (self.mean_qualities[len / 2 - 1] + self.mean_qualities[len / 2]) / 2.0
+        } else {
+            self.mean_qualities[len / 2]
+        };
+
+        self.median_quality = median_quality as usize;
+    }
+
     fn compute_mean_quality(&mut self) {
         let mut mean_quality: f64 = 0.0;
         for q in &self.mean_qualities {
@@ -254,6 +275,7 @@ impl Index<&str> for Metrics {
             "ng90" => &self.ng90,
             "lg90" => &self.lg90,
             "mean_quality" => &self.mean_quality,
+            "median_quality" => &self.median_quality,
             _ => panic!("Unknown field: {index}"),
         }
     }

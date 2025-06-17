@@ -44,6 +44,8 @@ pub struct FormattedMetrics {
 
     #[tabled(rename = "Mean quality")]
     pub mean_quality: String,
+    #[tabled(rename = "Median quality")]
+    pub median_quality: String,
 }
 
 impl FormattedMetrics {
@@ -114,6 +116,7 @@ impl FormattedMetrics {
             ng80_lg80,
             ng90_lg90,
             mean_quality: metrics.mean_quality.to_string(),
+            median_quality: metrics.median_quality.to_string(),
         }
     }
 }

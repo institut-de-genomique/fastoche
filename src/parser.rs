@@ -161,6 +161,14 @@ mod tests {
         compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
     }
 
+    fn setup_fasta_metrics() -> Metrics {
+        let path = std::path::Path::new("test_inputs/test.fasta");
+
+        let mut per_seq_writer = None;
+
+        compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
+    }
+
     #[test]
     fn test_reads_cumul() {
         let metrics = setup_reads_metrics();
@@ -255,5 +263,47 @@ mod tests {
     fn test_reads_mean_quality() {
         let metrics = setup_reads_metrics();
         assert_eq!(metrics.mean_quality, 9);
+    }
+
+    #[test]
+    fn test_reads_median_quality() {
+        let metrics = setup_reads_metrics();
+        assert_eq!(metrics.median_quality, 9);
+    }
+
+    #[test]
+    fn test_fasta_mean_quality() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.mean_quality, 0);
+    }
+
+    #[test]
+    fn test_fasta_median_quality() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.median_quality, 0);
+    }
+
+    #[test]
+    fn test_fasta_cumul() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.cumul, 48);
+    }
+
+    #[test]
+    fn test_fasta_number() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.number, 4);
+    }
+
+    #[test]
+    fn test_fasta_n50() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.n50, 20);
+    }
+
+    #[test]
+    fn test_fasta_l50() {
+        let metrics = setup_fasta_metrics();
+        assert_eq!(metrics.l50, 2);
     }
 }

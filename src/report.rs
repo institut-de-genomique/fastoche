@@ -1,9 +1,9 @@
 use crate::formatted_metrics::FormattedMetrics;
 use crate::metrics::Metrics;
-use tabled::object::{Columns, LastRow, Object, Rows};
+use tabled::object::{Columns, Object, Rows};
 use tabled::{Alignment, Disable, Modify, Style, Table};
 
-const FIELDS: [&str; 24] = [
+const FIELDS: [&str; 25] = [
     "cumul",
     "number",
     "min_size",
@@ -28,6 +28,7 @@ const FIELDS: [&str; 24] = [
     "ng90",
     "lg90",
     "mean_quality",
+    "median_quality",
 ];
 
 // const OPTIONAL_FIELDS: [&str; 4] = ["ng50", "ng80", "ng90", "mean_quality"];
@@ -56,7 +57,8 @@ pub fn print(metrics_vec: &[Metrics]) {
         styled_table = styled_table.with(Disable::row(Rows::new(13..16)));
     }
     if fmt[0].mean_quality == "0" {
-        styled_table = styled_table.with(Disable::row(LastRow));
+        // Hide both mean_quality and median_quality rows
+        styled_table = styled_table.with(Disable::row(Rows::new(13..15)));
     }
 
     println!("{styled_table}");
