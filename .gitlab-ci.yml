@@ -1,16 +1,13 @@
-stages:
+include:
+  - project: rdbioseq/cicd
+    file: cicd.yml
+    inputs:
+      module-name: "fastoche"
+      module-snapshot: true
+
+stages: 
   - deploy
 
-variables:
-  deploygroup: "rdbioseq"
-  modulename: "fastoche"
-  moduleversion: "1.2"
-  modulesnapshot: "true"
-  
-deploy-modules:
+deploy:
   stage: deploy
-  variables:
-    PROJECT_PATH: $CI_PROJECT_PATH
-  trigger:
-    project: modules/modules
-    strategy: depend
+  extends: .deploy
