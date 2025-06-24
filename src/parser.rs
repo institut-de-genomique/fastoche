@@ -62,8 +62,16 @@ fn compute_stats(
     per_seq_writer: &mut Option<BufWriter<std::fs::File>>,
     name: Option<String>,
 ) -> Metrics {
-    let mut reader = get_reader(file_path);
     let mut metrics = Metrics::new(file_path.to_str().unwrap(), genome_size, name);
+
+    // Handle empty files by checking if reader creation fails
+    let mut reader = match get_reader(file_path) {
+        Ok(reader) => reader,
+        Err(_) => {
+            // File is empty or cannot be parsed, return empty metrics
+            return metrics;
+        }
+    };
 
     while let Some(record) = reader.next() {
         let record = record.expect("Error");
@@ -132,7 +140,7 @@ fn write_per_seq(
     }
 }
 
-fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
+fn get_reader(file_path: &Path) -> Result<Box<dyn needletail::FastxReader>, needletail::errors::ParseError> {
     assert!(file_path.exists(), "File not found {file_path:?}");
 
     let file =
@@ -141,12 +149,12 @@ fn get_reader(file_path: &Path) -> Box<dyn needletail::FastxReader> {
 
     let reader = if file_path.extension().take().unwrap_or_else(|| panic!("File extension should not be empty! As an example, file should be named 'toto.fasta' and not 'toto'.")) == "gz" {
         let gz = MultiGzDecoder::new(buf_reader);
-        needletail::parse_fastx_reader(gz).unwrap()
+        needletail::parse_fastx_reader(gz)?
     } else {
-        needletail::parse_fastx_reader(buf_reader).unwrap()
+        needletail::parse_fastx_reader(buf_reader)?
     };
 
-    reader
+    Ok(reader)
 }
 
 #[cfg(test)]
@@ -155,17 +163,19 @@ mod tests {
 
     fn setup_reads_metrics() -> Metrics {
         let path = std::path::Path::new("test_inputs/reads.fastq.gz");
-
         let mut per_seq_writer = None;
-
         compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
     }
 
     fn setup_fasta_metrics() -> Metrics {
         let path = std::path::Path::new("test_inputs/test.fasta");
-
         let mut per_seq_writer = None;
+        compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
+    }
 
+    fn setup_empty_metrics() -> Metrics {
+        let path = std::path::Path::new("test_inputs/empty.fasta");
+        let mut per_seq_writer = None;
         compute_stats(path, 0, 0, 33, &mut per_seq_writer, None)
     }
 
@@ -305,5 +315,59 @@ mod tests {
     fn test_fasta_l50() {
         let metrics = setup_fasta_metrics();
         assert_eq!(metrics.l50, 2);
+    }
+
+    #[test]
+    fn test_empty_file_cumul() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.cumul, 0);
+    }
+
+    #[test]
+    fn test_empty_file_number() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.number, 0);
+    }
+
+    #[test]
+    fn test_empty_file_n50() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.n50, 0);
+    }
+
+    #[test]
+    fn test_empty_file_l50() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.l50, 0);
+    }
+
+    #[test]
+    fn test_empty_file_min_size() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.min_size, 0);
+    }
+
+    #[test]
+    fn test_empty_file_max_size() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.max_size, 0);
+    }
+
+    #[test]
+    fn test_empty_file_avg_size() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.avg_size, 0);
+    }
+
+    #[test]
+    fn test_empty_file_percent_gc() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.percent_gc, 0.0);
+    }
+
+    #[test]
+    fn test_empty_file_percent_n() {
+        let metrics = setup_empty_metrics();
+        assert_eq!(metrics.percent_n, 0.0);
     }
 }
