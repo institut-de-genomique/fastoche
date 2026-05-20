@@ -4,6 +4,7 @@ include:
     inputs:
       module-name: "fastoche"
       module-snapshot: true
+      other-branches-as-named: true
 
 stages: 
   - deploy
