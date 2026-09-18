@@ -81,7 +81,7 @@ fn compute_stats(
             continue;
         }
 
-        metrics.seq_sizes.push(record_len);
+        metrics.add_length(record_len);
         count_nucleotides(&mut metrics, &record.seq());
         let avg_quality = compute_avg_quality(&mut metrics, record.qual(), qual_offset);
         write_per_seq(record, per_seq_writer, avg_quality, record_len);
@@ -104,9 +104,9 @@ fn compute_avg_quality(metrics: &mut Metrics, qualities: Option<&[u8]>, qual_off
         for q in qualities {
             avg_quality += (q - qual_offset) as f64;
         }
-        metrics
-            .mean_qualities
-            .push(avg_quality / qualities.len() as f64);
+        if !qualities.is_empty() {
+            metrics.add_quality(avg_quality / qualities.len() as f64);
+        }
     }
 
     avg_quality
@@ -140,7 +140,9 @@ fn write_per_seq(
     }
 }
 
-fn get_reader(file_path: &Path) -> Result<Box<dyn needletail::FastxReader>, needletail::errors::ParseError> {
+fn get_reader(
+    file_path: &Path,
+) -> Result<Box<dyn needletail::FastxReader>, needletail::errors::ParseError> {
     assert!(file_path.exists(), "File not found {file_path:?}");
 
     let file =
@@ -160,6 +162,37 @@ fn get_reader(file_path: &Path) -> Result<Box<dyn needletail::FastxReader>, need
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_quality_mean_is_read_weighted() {
+        let mut metrics = Metrics::new("weighted.fastq", 0, None);
+        let mut add_read = |qualities: &[u8]| {
+            metrics.add_length(qualities.len());
+            compute_avg_quality(&mut metrics, Some(qualities), 33);
+        };
+        add_read(b"+,");
+        add_read(b"????????");
+        metrics.compute();
+
+        // Read means are 10.5 and 30, not a base-weighted mean of 26.1.
+        assert_eq!(metrics.mean_quality, 20);
+        assert_eq!(metrics.median_quality, 20);
+    }
+
+    #[test]
+    fn test_min_size_can_filter_every_sequence() {
+        let metrics = compute_stats(
+            Path::new("test_inputs/test.fasta"),
+            usize::MAX,
+            0,
+            33,
+            &mut None,
+            None,
+        );
+        assert_eq!(metrics.number, 0);
+        assert_eq!(metrics.cumul, 0);
+        assert_eq!((metrics.n50, metrics.l50), (0, 0));
+    }
 
     fn setup_reads_metrics() -> Metrics {
         let path = std::path::Path::new("test_inputs/reads.fastq.gz");

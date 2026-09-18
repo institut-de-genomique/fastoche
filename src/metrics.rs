@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Index};
+use std::{collections::BTreeMap, fmt::Display, ops::Index};
 
 #[derive(Debug)]
 pub struct Metrics {
@@ -27,9 +27,9 @@ pub struct Metrics {
     pub lg80: usize,
     pub ng90: usize,
     pub lg90: usize,
-    pub seq_sizes: Vec<usize>,
+    length_counts: BTreeMap<usize, usize>,
     pub nucleotide_counts: [usize; 256],
-    pub mean_qualities: Vec<f64>,
+    quality_counts: BTreeMap<u64, usize>,
     pub mean_quality: usize,
     pub median_quality: usize,
 }
@@ -75,58 +75,80 @@ impl Metrics {
             lg80: 0,
             ng90: 0,
             lg90: 0,
-            seq_sizes: Vec::new(),
+            length_counts: BTreeMap::new(),
             nucleotide_counts: [0; 256],
-            mean_qualities: Vec::new(),
+            quality_counts: BTreeMap::new(),
             mean_quality: 0,
             median_quality: 0,
         }
     }
 
-    pub fn compute(&mut self) {
-        self.seq_sizes.sort_by(|a, b| b.cmp(a));
+    pub fn add_length(&mut self, length: usize) {
+        *self.length_counts.entry(length).or_default() += 1;
+    }
 
+    pub fn add_quality(&mut self, mean_quality: f64) {
+        *self
+            .quality_counts
+            .entry(mean_quality.to_bits())
+            .or_default() += 1;
+    }
+
+    pub fn compute(&mut self) {
         self.compute_seq_number();
+        if self.number == 0 {
+            return;
+        }
         self.compute_cumul();
         self.compute_min_size();
         self.compute_max_size();
         self.compute_avg_size();
         self.compute_med_size();
-        self.compute_number_n();
-        self.compute_number_gc();
-        self.compute_aun_and_nx_metrics();
+        if self.cumul > 0 {
+            self.compute_number_n();
+            self.compute_number_gc();
+            self.compute_aun_and_nx_metrics();
+        }
 
-        self.seq_sizes = Vec::new();
+        self.length_counts.clear();
 
-        self.compute_median_quality();
-        self.compute_mean_quality();
+        self.compute_quality_metrics();
+        self.quality_counts.clear();
     }
 
     fn compute_seq_number(&mut self) {
-        self.number = self.seq_sizes.len();
+        self.number = self.length_counts.values().sum();
     }
 
     fn compute_cumul(&mut self) {
-        for size in &self.seq_sizes {
-            self.cumul += *size;
-        }
+        self.cumul = self
+            .length_counts
+            .iter()
+            .map(|(size, count)| size * count)
+            .sum();
     }
 
     fn compute_min_size(&mut self) {
-        self.min_size = *self.seq_sizes.last().expect("Failed to get first element");
+        self.min_size = *self.length_counts.first_key_value().unwrap().0;
     }
 
     fn compute_max_size(&mut self) {
-        self.max_size = *self.seq_sizes.first().expect("Failed to get last element");
+        self.max_size = *self.length_counts.last_key_value().unwrap().0;
     }
 
     fn compute_avg_size(&mut self) {
-        self.avg_size = self.seq_sizes.iter().sum::<usize>() / self.number;
+        self.avg_size = self.cumul / self.number;
     }
 
     fn compute_med_size(&mut self) {
-        let mid = self.seq_sizes.len() / 2;
-        self.med_size = self.seq_sizes[mid];
+        let mut rank = (self.number - 1) / 2;
+        for (&size, &count) in &self.length_counts {
+            if rank < count {
+                self.med_size = size;
+                break;
+            }
+            rank -= count;
+        }
     }
 
     fn compute_number_n(&mut self) {
@@ -144,101 +166,86 @@ impl Metrics {
     }
 
     fn compute_aun_and_nx_metrics(&mut self) {
-        let breakpoints: Vec<usize> = vec![
-            (0.5 * self.cumul as f64) as usize,
-            (0.8 * self.cumul as f64) as usize,
-            (0.9 * self.cumul as f64) as usize,
-            (1.1 * self.cumul as f64) as usize,
-        ];
-        let breakpoints_g: Vec<usize> = vec![
-            (0.5 * self.genome_size as f64) as usize,
-            (0.8 * self.genome_size as f64) as usize,
-            (0.9 * self.genome_size as f64) as usize,
-            (1000_f64 * self.genome_size as f64) as usize,
-        ];
-        let mut current_breakpoint: usize = 0;
-        let mut current_breakpoint_g: usize = 0;
-        let mut current_lx = 0;
-        let mut current_lx_g = 0;
-        let mut cumul: usize = 0;
+        let sum_squares: u128 = self
+            .length_counts
+            .iter()
+            .map(|(&size, &count)| size as u128 * size as u128 * count as u128)
+            .sum();
+        self.aun = (sum_squares / self.cumul as u128) as usize;
 
-        for size in &self.seq_sizes {
-            cumul += *size;
-            current_lx += 1;
-            current_lx_g += 1;
-            self.aun += f64::powi(*size as f64, 2_i32) as usize;
-
-            if cumul >= breakpoints[current_breakpoint] {
-                match current_breakpoint {
-                    0 => {
-                        self.n50 = *size;
-                        self.l50 = current_lx;
-                    }
-                    1 => {
-                        self.n80 = *size;
-                        self.l80 = current_lx;
-                    }
-                    2 => {
-                        self.n90 = *size;
-                        self.l90 = current_lx;
-                    }
-                    _ => {}
-                }
-
-                current_breakpoint += 1;
-            }
-
-            if self.genome_size > 0 && cumul >= breakpoints_g[current_breakpoint_g] {
-                match current_breakpoint_g {
-                    0 => {
-                        self.ng50 = *size;
-                        self.lg50 = current_lx_g;
-                    }
-                    1 => {
-                        self.ng80 = *size;
-                        self.lg80 = current_lx_g;
-                    }
-                    2 => {
-                        self.ng90 = *size;
-                        self.lg90 = current_lx_g;
-                    }
-                    _ => {}
-                }
-
-                current_breakpoint_g += 1;
-            }
+        [
+            (self.n50, self.l50),
+            (self.n80, self.l80),
+            (self.n90, self.l90),
+        ] = self.nx_metrics(self.cumul);
+        if self.genome_size > 0 {
+            [
+                (self.ng50, self.lg50),
+                (self.ng80, self.lg80),
+                (self.ng90, self.lg90),
+            ] = self.nx_metrics(self.genome_size as usize);
         }
-
-        self.aun = (self.aun as f64 / self.cumul as f64) as usize;
     }
 
-    fn compute_median_quality(&mut self) {
-        if self.mean_qualities.is_empty() {
-            self.median_quality = 0;
+    fn nx_metrics(&self, total: usize) -> [(usize, usize); 3] {
+        let thresholds = [0.5, 0.8, 0.9].map(|fraction| (fraction * total as f64) as usize);
+        let mut result = [(0, 0); 3];
+        let mut next = 0;
+        let mut bases = 0;
+        let mut reads = 0;
+
+        for (&size, &count) in self.length_counts.iter().rev() {
+            if size == 0 {
+                break;
+            }
+            let end = bases + size * count;
+            while next < thresholds.len() && thresholds[next] <= end {
+                // A threshold may fall partway through a group of equal lengths.
+                let remaining = thresholds[next].saturating_sub(bases);
+                let within_group = 1 + remaining.saturating_sub(1) / size;
+                result[next] = (size, reads + within_group);
+                next += 1;
+            }
+            if next == thresholds.len() {
+                break;
+            }
+            bases = end;
+            reads += count;
+        }
+
+        result
+    }
+
+    fn compute_quality_metrics(&mut self) {
+        let number: usize = self.quality_counts.values().sum();
+        if number == 0 {
             return;
         }
 
-        self.mean_qualities.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let lower_rank = (number - 1) / 2;
+        let upper_rank = number / 2;
+        let mut seen = 0;
+        let mut lower = 0.0;
+        let mut upper = 0.0;
+        let mut sum = 0.0;
 
-        let len = self.mean_qualities.len();
-        let median_quality = if len % 2 == 0 {
-            (self.mean_qualities[len / 2 - 1] + self.mean_qualities[len / 2]) / 2.0
-        } else {
-            self.mean_qualities[len / 2]
-        };
-
-        self.median_quality = median_quality as usize;
-    }
-
-    fn compute_mean_quality(&mut self) {
-        let mut mean_quality: f64 = 0.0;
-        for q in &self.mean_qualities {
-            mean_quality += q;
+        for (&bits, &count) in &self.quality_counts {
+            let quality = f64::from_bits(bits);
+            let end = seen + count;
+            if seen <= lower_rank && lower_rank < end {
+                lower = quality;
+            }
+            if seen <= upper_rank && upper_rank < end {
+                upper = quality;
+            }
+            for _ in 0..count {
+                sum += quality;
+            }
+            seen = end;
         }
-        mean_quality /= self.mean_qualities.len() as f64;
-        self.mean_quality = mean_quality as usize;
 
-        self.mean_qualities = Vec::new();
+        self.mean_quality = (sum / number as f64) as usize;
+        self.median_quality = ((lower + upper) / 2.0) as usize;
     }
 }
 
@@ -278,5 +285,99 @@ impl Index<&str> for Metrics {
             "median_quality" => &self.median_quality,
             _ => panic!("Unknown field: {index}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Metrics;
+
+    fn length_metrics(lengths: &[usize], genome_size: i64) -> Metrics {
+        let mut metrics = Metrics::new("lengths.fasta", genome_size, None);
+        for &length in lengths {
+            metrics.add_length(length);
+        }
+        metrics.compute();
+        metrics
+    }
+
+    fn quality_metrics(qualities: &[f64]) -> Metrics {
+        let mut metrics = Metrics::new("qualities.fastq", 0, None);
+        for &quality in qualities {
+            metrics.add_length(10);
+            metrics.add_quality(quality);
+        }
+        metrics.compute();
+        metrics
+    }
+
+    #[test]
+    fn test_thresholds_inside_repeated_length_groups() {
+        let metrics = length_metrics(&[200, 150, 150, 150, 150, 100, 100], 1200);
+        assert_eq!((metrics.number, metrics.cumul), (7, 1000));
+        assert_eq!((metrics.min_size, metrics.max_size), (100, 200));
+        assert_eq!(
+            (metrics.avg_size, metrics.med_size, metrics.aun),
+            (142, 150, 150)
+        );
+        assert_eq!((metrics.n50, metrics.l50), (150, 3));
+        assert_eq!((metrics.n80, metrics.l80), (150, 5));
+        assert_eq!((metrics.n90, metrics.l90), (100, 6));
+        assert_eq!((metrics.ng50, metrics.lg50), (150, 4));
+        assert_eq!((metrics.ng80, metrics.lg80), (100, 7));
+        assert_eq!((metrics.ng90, metrics.lg90), (0, 0));
+    }
+
+    #[test]
+    fn test_one_sequence_can_cross_multiple_thresholds() {
+        let metrics = length_metrics(&[1000, 1, 1], 1000);
+        assert_eq!((metrics.n50, metrics.l50), (1000, 1));
+        assert_eq!((metrics.n80, metrics.l80), (1000, 1));
+        assert_eq!((metrics.n90, metrics.l90), (1000, 1));
+        assert_eq!((metrics.ng50, metrics.lg50), (1000, 1));
+        assert_eq!((metrics.ng80, metrics.lg80), (1000, 1));
+        assert_eq!((metrics.ng90, metrics.lg90), (1000, 1));
+    }
+
+    #[test]
+    fn test_even_length_median_uses_lower_middle() {
+        let metrics = length_metrics(&[400, 200, 100, 100], 0);
+        assert_eq!(metrics.med_size, 100);
+    }
+
+    #[test]
+    fn test_quality_median_preserves_fractional_middle_values() {
+        let metrics = quality_metrics(&[11.9, 10.9, 11.9, 10.9]);
+        assert_eq!(metrics.mean_quality, 11);
+        assert_eq!(metrics.median_quality, 11);
+    }
+
+    #[test]
+    fn test_quality_statistics_weight_repeated_values() {
+        let metrics = quality_metrics(&[30.0, 11.9, 10.9, 11.9, 11.9]);
+        assert_eq!(metrics.mean_quality, 15);
+        assert_eq!(metrics.median_quality, 11);
+    }
+
+    #[test]
+    fn test_quality_mean_preserves_integer_boundary() {
+        // Means from two real 150-base reads, repeated 63 and 2 times.
+        // Multiplying each mean by its count rounds the result below 39.
+        let mut qualities = [5890.0 / 150.0; 65];
+        qualities[63..].fill(4590.0 / 150.0);
+        let metrics = quality_metrics(&qualities);
+        assert_eq!(metrics.mean_quality, 39);
+    }
+
+    #[test]
+    fn test_quality_mean_is_independent_of_input_order() {
+        // Descending input would truncate to 35 if summed before sorting.
+        let mut qualities = [5547.0 / 150.0; 113];
+        qualities[64..].fill(5208.0 / 150.0);
+        let descending = quality_metrics(&qualities);
+        qualities.reverse();
+        let ascending = quality_metrics(&qualities);
+        assert_eq!(descending.mean_quality, 36);
+        assert_eq!(ascending.mean_quality, 36);
     }
 }
